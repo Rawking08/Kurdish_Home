@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vehicle Marketplace</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #e8d3b9; /* Light brown background */
+      padding: 20px;
+      margin: 0;
+    }
+
+    h1, h2, h3 {
+      color: #5c3b15; /* Dark brown text */
+      text-align: center;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      background: #f5c518; /* Yellow */
+      color: #5c3b15; /* Dark brown text */
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 16px;
+    }
+    .btn:hover {
+      background: #ffdb4d; /* lighter yellow on hover */
+    }
+
+    .vehicle-form {
+      display: none;
+      background: #fff8ee; /* Very light brown/cream */
+      padding: 20px;
+      border: 2px solid #d2b48c;
+      border-radius: 10px;
+      max-width: 500px;
+      margin: 20px auto;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    input, textarea {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #d2b48c;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .listing {
+      background: #fff8ee;
+      border: 1px solid #d2b48c;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+    }
+
+    .admin-controls {
+      margin-top: 10px;
+      display: none;
+    }
+    .admin-controls button {
+      background: #d4a017;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+    .admin-controls button:hover {
+      background: #e6b800;
+    }
+
+    #previewImage {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border: 1px solid #d2b48c;
+      display: none;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .error {
+      color: red;
+      font-size: 14px;
+    }
+
+    /* Footer style */
+    footer {
+      background-color: #5c3b15;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      margin-top: 30px;
+      font-size: 14px;
+    }
+
+    /* Responsive design for phones */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .vehicle-form, .listing {
+        padding: 15px;
+      }
+      h1, h2, h3 {
+        font-size: 22px;
+      }
+      .btn {
+        width: 100%;
+        margin-top: 10px;
+      }
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🚗 Vehicle Marketplace</h1>
+
+  <div style="text-align: center;">
+    <button class="btn" onclick="toggleForm()">List Your Vehicle</button>
+    <button class="btn" onclick="requestAdmin()">👑 Admin Access</button>
+    <br><br>
+    <button class="btn" onclick="window.location.href='index.html'">Back to Home</button>
+  </div>
+
+  <div class="vehicle-form" id="vehicleForm">
+    <h3>Vehicle Details</h3>
+    <form id="sellForm">
+      <input type="text" placeholder="Make (e.g. Toyota)" required />
+      <input type="text" placeholder="Model (e.g. Corolla)" required />
+      <input type="number" placeholder="Year" required />
+      <input type="number" placeholder="Price ($)" required />
+      <input type="number" placeholder="Mileage (km)" required />
+      <textarea placeholder="Description" required></textarea>
+      <input type="text" placeholder="Contact Info" required />
+      
+      <input type="file" id="imageInput" accept="image/*" required />
+      <img id="previewImage" />
+      <div id="imageError" class="error"></div>
+      
+      <button class="btn" type="submit">Submit Listing</button>
+    </form>
+  </div>
+
+  <h2>All Vehicle Listings</h2>
+  <div id="listings"></div>
+
+  <footer>
+    <p>&copy; 2025 Vehicle Marketplace | All Rights Reserved</p>
+  </footer>
+
+  <script>
+    let isAdmin = false;
+    const adminPassword = "admin123"; // Change this password!
+
+    window.onload = function() {
+      const savedListings = JSON.parse(localStorage.getItem('vehicleListings')) || [];
+      savedListings.forEach(listing => displayListing(listing));
+    };
+
+    function toggleForm() {
+      const form = document.getElementById("vehicleForm");
+      form.style.display = form.style.display === "block" ? "none" : "block";
+    }
+
+    function requestAdmin() {
+      const input = prompt("Enter admin password:");
+      if (input === adminPassword) {
+        enableAdmin();
+      } else {
+        alert("Incorrect password.");
+      }
+    }
+
+    function enableAdmin() {
+      isAdmin = true;
+      const adminControls = document.querySelectorAll('.admin-controls');
+      adminControls.forEach(ctrl => ctrl.style.display = 'block');
+      alert("Admin mode activated 👑");
+    }
+
+    const form = document.getElementById("sellForm");
+    const listings = document.getElementById("listings");
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const imageFile = document.getElementById("imageInput").files[0];
+      if (!imageFile) {
+        document.getElementById("imageError").innerText = "Please choose an image file!";
+        return;
+      }
+      if (!isValidImageFile(imageFile)) {
+        document.getElementById("imageError").innerText = "Please upload a valid image file (JPEG, PNG, etc.)!";
+        return;
+      } else {
+        document.getElementById("imageError").innerText = "";
+      }
+
+      const inputs = form.querySelectorAll("input, textarea");
+      const data = Array.from(inputs).map(input => input.value);
+      const [make, model, year, price, mileage, description, contact] = data;
+
+      const newListing = {
+        make,
+        model,
+        year,
+        price,
+        mileage,
+        description,
+        contact,
+        image: imageFile
+      };
+
+      const savedListings = JSON.parse(localStorage.getItem('vehicleListings')) || [];
+      savedListings.push(newListing);
+      localStorage.setItem('vehicleListings', JSON.stringify(savedListings));
+
+      displayListing(newListing);
+
+      form.reset();
+      document.getElementById("previewImage").style.display = "none";
+      toggleForm();
+    });
+
+    function displayListing(listing) {
+      const listingElement = document.createElement("div");
+      listingElement.className = "listing";
+
+      const reader = new FileReader();
+      reader.onloadend = function() {
+        listingElement.innerHTML = `
+          <img src="${reader.result}" alt="Vehicle Image" />
+          <h3>${listing.year} ${listing.make} ${listing.model}</h3>
+          <p><strong>Price:</strong> $${listing.price}</p>
+          <p><strong>Mileage:</strong> ${listing.mileage} km</p>
+          <p>${listing.description}</p>
+          <p><strong>Contact:</strong> ${listing.contact}</p>
+          <div class="admin-controls" style="${isAdmin ? 'display:block' : 'display:none'}">
+            <button onclick="alert('Approved')">✅ Approve</button>
+            <button onclick="alert('Rejected')">❌ Reject</button>
+            <button onclick="deleteListing(this)">🗑️ Delete</button>
+          </div>
+        `;
+      };
+      reader.readAsDataURL(listing.image);
+
+      listings.prepend(listingElement);
+    }
+
+    function deleteListing(button) {
+      const listingElement = button.parentElement.parentElement;
+      const listingImage = listingElement.querySelector('img').src;
+
+      let savedListings = JSON.parse(localStorage.getItem('vehicleListings'));
+      savedListings = savedListings.filter(listing => listing.image !== listingImage);
+      localStorage.setItem('vehicleListings', JSON.stringify(savedListings));
+
+      listingElement.remove();
+    }
+
+    function isValidImageFile(file) {
+      const validExtensions = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      return validExtensions.includes(file.type);
+    }
+
+    const imageInput = document.getElementById("imageInput");
+    const previewImage = document.getElementById("previewImage");
+
+    imageInput.addEventListener("change", function () {
+      const file = imageInput.files[0];
+      if (file && isValidImageFile(file)) {
+        const reader = new FileReader();
+        reader.onloadend = function() {
+          previewImage.src = reader.result;
+          previewImage.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+
+</body>
+</html>

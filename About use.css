@@ -1,0 +1,110 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: url("images/kurdish home (2).png") no-repeat center center fixed;
+  background-size: cover;
+  color: #fff;
+  padding: 2rem;
+}
+
+header {
+  background: rgba(0, 0, 0, 0.85);
+  padding: 1.2rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 26px;
+  color: #ffd700;
+  text-transform: uppercase;
+}
+
+nav a {
+  color: #ffd700;
+  text-decoration: none;
+  margin-left: 1rem;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+nav a:hover {
+  color: #e6c200;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+h2 {
+  font-size: 30px;
+  margin-bottom: 1.5rem;
+  color: #ffd700;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+p {
+  line-height: 1.7;
+  font-size: 17px;
+  color: #eee;
+}
+
+.team {
+  margin-top: 2.5rem;
+}
+
+.team-member {
+  margin-bottom: 2rem;
+}
+
+.team-member h4 {
+  margin: 0;
+  font-size: 20px;
+  color: #ffd700;
+  text-transform: uppercase;
+}
+
+.team-member span {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.home-button-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.Homebutton {
+  padding: 12px 24px;
+  background-color: #ffd700;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  color: #000;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: background 0.3s ease;
+}
+
+.Homebutton:hover {
+  background-color: #e6c200;
+}

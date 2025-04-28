@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketplace</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f6fa;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    header {
+      background: #1877f2;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    button {
+      background: #1877f2;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #155dc0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .item {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+
+    .item:hover {
+      transform: scale(1.05);
+    }
+
+    .item img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .item-details {
+      padding: 15px;
+    }
+
+    .item-details h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .item-details p {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .poster {
+      font-size: 12px;
+      color: #888;
+      margin-top: 8px;
+    }
+
+    .admin-buttons {
+      margin-top: 10px;
+    }
+
+    .admin-buttons button {
+      margin-right: 10px;
+    }
+
+    .item-details button {
+      margin-top: 10px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .item-details button:hover {
+      background: #c0392b;
+    }
+
+    #loginPrompt {
+      background: #fff3cd;
+      padding: 15px;
+      border: 1px solid #ffeeba;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      width: 90%;
+    }
+
+    .modal img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .filter-section {
+      margin-bottom: 30px;
+    }
+
+    .filter-section select {
+      width: 150px;
+      margin-right: 10px;
+    }
+
+    /* Mobile-friendly adjustments */
+    @media (max-width: 768px) {
+      header {
+        font-size: 20px;
+      }
+
+      .container {
+        padding: 15px;
+      }
+
+      input, textarea, select {
+        padding: 12px;
+      }
+
+      .item {
+        margin: 10px 0;
+      }
+
+      .modal-content {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>📦 Marketplace</header>
+
+<div class="container">
+  <button onclick="promptAdminLogin()">🔐 Admin Login</button>
+
+  <div id="loginPrompt">
+    <h3>Welcome! Please enter your name to post:</h3>
+    <input id="userNameInput" placeholder="Your name" />
+    <button onclick="loginUser()">Login</button>
+  </div>
+
+  <div id="formSection" style="display:none;">
+    <button id="showFormBtn" onclick="showForm()" style="margin-bottom: 20px;">➕ List an Item</button>
+
+    <div id="itemForm" style="display:none;">
+      <h2>List an Item</h2>
+      <input id="itemTitle" placeholder="Item name" />
+      <textarea id="itemDescription" placeholder="Item description"></textarea>
+      <input id="itemPrice" placeholder="Price ($)" />
+      <input id="itemContact" placeholder="Your contact info" />
+      <select id="itemCategory">
+        <option value="">Select Category</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Furniture">Furniture</option>
+        <option value="Clothing">Clothing</option>
+        <option value="Books">Books</option>
+      </select>
+      <input type="file" id="itemImage" />
+      <button onclick="submitItem()">Submit</button>
+      <p id="submitMessage" style="color: green;"></p>
+    </div>
+  </div>
+
+  <div id="pendingSection" style="display:none;">
+    <h2>Pending Items (Admin Only)</h2>
+    <div class="grid" id="pendingItems"></div>
+  </div>
+
+  <h2>Marketplace</h2>
+  <div class="grid" id="approvedItems"></div>
+</div>
+
+<div class="modal" id="itemModal" onclick="this.style.display='none'">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <img id="modalImage" src="" alt="Item Image" />
+    <h3 id="modalTitle"></h3>
+    <p id="modalDesc"></p>
+    <p><strong>Price:</strong> $<span id="modalPrice"></span></p>
+    <p><strong>Contact:</strong> <span id="modalContact"></span></p>
+    <p class="poster">Posted by: <span id="modalPoster"></span></p>
+  </div>
+</div>
+
+<script>
+  const bannedWords = ["car", "bike", "truck", "motorcycle", "vehicle", "scooter", "van"];
+  let items = JSON.parse(localStorage.getItem("marketItems")) || [];
+  let userName = localStorage.getItem("marketUser");
+  let isAdmin = false;
+
+  function saveItems() {
+    localStorage.setItem("marketItems", JSON.stringify(items));
+  }
+
+  function loginUser() {
+    const name = document.getElementById("userNameInput").value.trim();
+    if (name) {
+      localStorage.setItem("marketUser", name);
+      userName = name;
+      document.getElementById("loginPrompt").style.display = "none";
+      document.getElementById("formSection").style.display = "block";
+    }
+  }
+
+  function showForm() {
+    document.getElementById("itemForm").style.display = "block";
+    document.getElementById("showFormBtn").style.display = "none";
+  }
+
+  function promptAdminLogin() {
+    const code = prompt("Enter Admin Code:");
+    if (code === "admin123") {
+      isAdmin = true;
+      document.getElementById("pendingSection").style.display = "block";
+      alert("Admin mode activated");
+      loadItems();
+    } else {
+      alert("Incorrect admin code.");
+    }
+  }
+
+  function submitItem() {
+    const title = document.getElementById("itemTitle").value.trim();
+    const description = document.getElementById("itemDescription").value.trim();
+    const price = document.getElementById("itemPrice").value.trim();
+    const category = document.getElementById("itemCategory").value;
+    const imageFile = document.getElementById("itemImage").files[0];
+    const contact = document.getElementById("itemContact").value.trim();
+
+    if (!title || !description || !price || !category || !contact) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    if (bannedWords.some(word => (title + " " + description).toLowerCase().includes(word))) {
+      alert("Vehicle-related items are not allowed.");
+      return;
+    }
+
+    const imageURL = imageFile ? URL.createObjectURL(imageFile) : "https://via.placeholder.com/250x180?text=No+Image";
+    items.push({ title, description, price, category, image: imageURL, poster: userName, contact, approved: false });
+    saveItems();
+    document.getElementById("submitMessage").innerText = "Submitted for approval!";
+    document.getElementById("itemTitle").value = "";
+    document.getElementById("itemDescription").value = "";
+    document.getElementById("itemPrice").value = "";
+    document.getElementById("itemCategory").value = "";
+    document.getElementById("itemContact").value = "";
+    document.getElementById("itemImage").value = "";
+    loadItems();
+  }
+
+  function approveItem(index) {
+    items[index].approved = true;
+    saveItems();
+    loadItems();
+  }
+
+  function deleteItem(index) {
+    if (confirm("Are you sure you want to delete this item?")) {
+      items.splice(index, 1);
+      saveItems();
+      loadItems();
+    }
+  }
+
+  function showItemDetails(item) {
+    document.getElementById("modalImage").src = item.image;
+    document.getElementById("modalTitle").innerText = item.title;
+    document.getElementById("modalDesc").innerText = item.description;
+    document.getElementById("modalPrice").innerText = item.price;
+    document.getElementById("modalPoster").innerText = item.poster;
+    document.getElementById("modalContact").innerText = item.contact || "N/A";
+    document.getElementById("itemModal").style.display = "flex";
+  }
+
+  function loadItems() {
+    const pending = document.getElementById("pendingItems");
+    const approved = document.getElementById("approvedItems");
+    pending.innerHTML = "";
+    approved.innerHTML = "";
+
+    items.forEach((item, index) => {
+      const itemCard = document.createElement("div");
+      itemCard.className = "item";
+
+      itemCard.innerHTML = `
+        <img src="${item.image}" alt="${item.title}" />
+        <div class="item-details">
+          <h3>${item.title}</h3>
+          <p>${item.description}</p>
+          <p>Price: $${item.price}</p>
+          <p class="poster">Posted by: ${item.poster}</p>
+          ${isAdmin && item.approved ? `<button onclick="deleteItem(${index})">Remove</button>` : ""}
+        </div>
+      `;
+
+      if (item.approved) {
+        itemCard.onclick = () => showItemDetails(item);
+        approved.appendChild(itemCard);
+      } else if (isAdmin) {
+        const adminCard = document.createElement("div");
+        adminCard.className = "item";
+        adminCard.innerHTML = `
+          <img src="${item.image}" />
+          <div class="item-details">
+            <h3>${item.title}</h3>
+            <p>${item.description}</p>
+            <p>Price: $${item.price}</p>
+            <p class="poster">Posted by: ${item.poster}</p>
+            <div class="admin-buttons">
+              <button onclick="approveItem(${index})">Approve</button>
+              <button onclick="deleteItem(${index})">Delete</button>
+            </div>
+          </div>
+        `;
+        pending.appendChild(adminCard);
+      }
+    });
+  }
+
+  if (userName) {
+    document.getElementById("loginPrompt").style.display = "none";
+    document.getElementById("formSection").style.display = "block";
+  }
+
+  loadItems();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram Style Group Chat</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+      background-color: #e5e9ef;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 300px;
+      background-color: #2a2f4a;
+      color: #fff;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .sidebar h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .group-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .group-item {
+      background: #3b4060;
+      padding: 12px 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .group-item:hover {
+      background: #4c5175;
+    }
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: #fff;
+      border-left: 1px solid #ccc;
+    }
+    .chat-header {
+      padding: 15px;
+      background: #2a2f4a;
+      color: white;
+      font-size: 18px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .chat-box {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #e5e9ef;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-message {
+      max-width: 70%;
+      margin-bottom: 15px;
+      padding: 12px 15px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      animation: fadeIn 0.3s ease forwards;
+      position: relative;
+      word-break: break-word;
+    }
+    .chat-message strong {
+      display: block;
+      color: #007aff;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    .chat-message small {
+      display: block;
+      color: #999;
+      font-size: 11px;
+      margin-top: 5px;
+    }
+    .chat-input {
+      display: flex;
+      padding: 10px 15px;
+      background: #f8f9fb;
+      border-top: 1px solid #ccc;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      outline: none;
+    }
+    .chat-input button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      background: #007aff;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    .chat-input button:hover {
+      background: #005fcc;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px;
+        gap: 10px;
+      }
+      .group-item {
+        flex: 1 1 calc(50% - 10px);
+        text-align: center;
+      }
+      .chat-container {
+        flex: 1;
+        border-left: none;
+      }
+      .chat-header {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h2>Groups</h2>
+    <div class="group-list" id="groupList"></div>
+  </div>
+
+  <div class="chat-container">
+    <div class="chat-header" id="currentGroup">Select a Group</div>
+    <div class="chat-box" id="chatBox"></div>
+    <div class="chat-input">
+      <input type="text" id="messageInput" placeholder="Type a message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+<script>
+  const groups = ["Gaming Squad", "Study Buddies", "Work Team", "KMA Volunteers"];
+  let currentGroup = null;
+  let username = localStorage.getItem('username') || "";
+
+  if (!username) {
+    username = prompt("Enter your username:") || "Anonymous";
+    localStorage.setItem('username', username);
+  }
+
+  const groupListDiv = document.getElementById("groupList");
+
+  groups.forEach(group => {
+    const div = document.createElement("div");
+    div.className = "group-item";
+    div.textContent = group;
+    div.onclick = () => joinGroup(group);
+    groupListDiv.appendChild(div);
+  });
+
+  function joinGroup(groupName) {
+    currentGroup = groupName;
+    document.getElementById("currentGroup").textContent = groupName;
+    loadMessages();
+  }
+
+  function sendMessage() {
+    if (!currentGroup) return alert("Select a group first!");
+    const input = document.getElementById("messageInput");
+    const text = input.value.trim();
+    if (text === "") return;
+
+    const messages = JSON.parse(localStorage.getItem(currentGroup)) || [];
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    messages.push({ user: username, text, time: timestamp });
+    localStorage.setItem(currentGroup, JSON.stringify(messages));
+    input.value = "";
+    loadMessages();
+  }
+
+  function loadMessages() {
+    const chatBox = document.getElementById("chatBox");
+    chatBox.innerHTML = "";
+    const messages = JSON.parse(localStorage.getItem(currentGroup)) || [];
+    messages.forEach(msg => {
+      const div = document.createElement("div");
+      div.className = "chat-message";
+      div.innerHTML = `<strong>${msg.user}</strong>${msg.text}<small>${msg.time}</small>`;
+      chatBox.appendChild(div);
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+</script>
+
+</body>
+</html>
