@@ -153,6 +153,7 @@
       <input type="number" placeholder="Price ($)" required />
       <input type="number" placeholder="Mileage (km)" required />
       <textarea placeholder="Description" required></textarea>
+      <input type="text" placeholder="location" required />
       <input type="text" placeholder="Contact Info" required />
       
       <input type="file" id="imageInput" accept="image/*" required />
@@ -257,6 +258,7 @@
           <p><strong>Mileage:</strong> ${listing.mileage} km</p>
           <p>${listing.description}</p>
           <p><strong>Contact:</strong> ${listing.contact}</p>
+          <p><strong>location:</strong> ${listing.location}</p>
           <div class="admin-controls" style="${isAdmin ? 'display:block' : 'display:none'}">
             <button onclick="alert('Approved')">✅ Approve</button>
             <button onclick="alert('Rejected')">❌ Reject</button>

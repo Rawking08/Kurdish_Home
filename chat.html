@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Telegram Style Group Chat</title>
   <style>
     * {
@@ -13,6 +13,7 @@
       font-family: 'Roboto', 'Segoe UI', sans-serif;
       background-color: #e5e9ef;
       display: flex;
+      flex-direction: row;
       height: 100vh;
       overflow: hidden;
     }
@@ -124,6 +125,29 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    #adminPanel {
+      display: none;
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #fff;
+    }
+
+    #adminPanel input, #adminPanel button {
+      margin-top: 8px;
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    #adminPanel button {
+      background: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+
     /* Mobile Responsive */
     @media (max-width: 768px) {
       body {
@@ -132,13 +156,13 @@
       .sidebar {
         width: 100%;
         height: auto;
-        flex-direction: row;
+        flex-direction: column;
         flex-wrap: wrap;
         padding: 10px;
         gap: 10px;
       }
       .group-item {
-        flex: 1 1 calc(50% - 10px);
+        flex: 1 1 auto;
         text-align: center;
       }
       .chat-container {
@@ -156,6 +180,16 @@
   <div class="sidebar">
     <h2>Groups</h2>
     <div class="group-list" id="groupList"></div>
+
+    <div id="adminPanel">
+      <input type="text" id="newGroupName" placeholder="New Group Name">
+      <input type="text" id="accessTag" placeholder="Access Tag (optional)">
+      <button onclick="addGroup()">Add Group</button>
+    </div>
+
+    <button id="adminLoginBtn" onclick="showAdminLogin()" style="margin-top: auto; padding: 10px; background: #007aff; border: none; color: white; border-radius: 8px; cursor: pointer;">
+      Login as Admin
+    </button>
   </div>
 
   <div class="chat-container">
@@ -167,59 +201,99 @@
     </div>
   </div>
 
-<script>
-  const groups = ["Gaming Squad", "Study Buddies", "Work Team", "KMA Volunteers"];
-  let currentGroup = null;
-  let username = localStorage.getItem('username') || "";
+  <script>
+    const adminPassword = "admin123";
+    let isAdmin = false;
+    let currentGroup = null;
+    let username = localStorage.getItem('username') || "";
+    let userTag = localStorage.getItem('tag') || "";
 
-  if (!username) {
-    username = prompt("Enter your username:") || "Anonymous";
-    localStorage.setItem('username', username);
-  }
+    if (!username) {
+      username = prompt("Enter your username:") || "Anonymous";
+      localStorage.setItem('username', username);
+    }
 
-  const groupListDiv = document.getElementById("groupList");
+    if (!userTag) {
+      userTag = prompt("Enter your access tag (or leave blank):") || "";
+      localStorage.setItem('tag', userTag);
+    }
 
-  groups.forEach(group => {
-    const div = document.createElement("div");
-    div.className = "group-item";
-    div.textContent = group;
-    div.onclick = () => joinGroup(group);
-    groupListDiv.appendChild(div);
-  });
+    function renderGroups() {
+      const groupListDiv = document.getElementById("groupList");
+      groupListDiv.innerHTML = "";
+      const groups = JSON.parse(localStorage.getItem("groups") || "[]");
+      groups.forEach(group => {
+        if (!group.private || group.tag === userTag || isAdmin) {
+          const div = document.createElement("div");
+          div.className = "group-item";
+          div.textContent = group.name + (group.private ? " 🔒" : "");
+          div.onclick = () => joinGroup(group.name);
+          groupListDiv.appendChild(div);
+        }
+      });
+    }
 
-  function joinGroup(groupName) {
-    currentGroup = groupName;
-    document.getElementById("currentGroup").textContent = groupName;
-    loadMessages();
-  }
+    function joinGroup(groupName) {
+      currentGroup = groupName;
+      document.getElementById("currentGroup").textContent = groupName;
+      loadMessages();
+    }
 
-  function sendMessage() {
-    if (!currentGroup) return alert("Select a group first!");
-    const input = document.getElementById("messageInput");
-    const text = input.value.trim();
-    if (text === "") return;
+    function sendMessage() {
+      if (!currentGroup) return alert("Select a group first!");
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+      if (text === "") return;
+      const messages = JSON.parse(localStorage.getItem(currentGroup) || "[]");
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      messages.push({ user: username, text, time: timestamp });
+      localStorage.setItem(currentGroup, JSON.stringify(messages));
+      input.value = "";
+      loadMessages();
+    }
 
-    const messages = JSON.parse(localStorage.getItem(currentGroup)) || [];
-    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    messages.push({ user: username, text, time: timestamp });
-    localStorage.setItem(currentGroup, JSON.stringify(messages));
-    input.value = "";
-    loadMessages();
-  }
+    function loadMessages() {
+      const chatBox = document.getElementById("chatBox");
+      chatBox.innerHTML = "";
+      const messages = JSON.parse(localStorage.getItem(currentGroup) || "[]");
+      messages.forEach(msg => {
+        const div = document.createElement("div");
+        div.className = "chat-message";
+        div.innerHTML = `<strong>${msg.user}</strong>${msg.text}<small>${msg.time}</small>`;
+        chatBox.appendChild(div);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-  function loadMessages() {
-    const chatBox = document.getElementById("chatBox");
-    chatBox.innerHTML = "";
-    const messages = JSON.parse(localStorage.getItem(currentGroup)) || [];
-    messages.forEach(msg => {
-      const div = document.createElement("div");
-      div.className = "chat-message";
-      div.innerHTML = `<strong>${msg.user}</strong>${msg.text}<small>${msg.time}</small>`;
-      chatBox.appendChild(div);
-    });
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-</script>
+    function showAdminLogin() {
+      const pw = prompt("Enter admin password:");
+      if (pw === adminPassword) {
+        isAdmin = true;
+        document.getElementById("adminPanel").style.display = "block";
+        alert("Admin access granted.");
+        renderGroups();
+        document.getElementById("adminLoginBtn").style.display = "none";
+      } else {
+        alert("Incorrect password.");
+      }
+    }
+
+    function addGroup() {
+      const name = document.getElementById("newGroupName").value.trim();
+      const tag = document.getElementById("accessTag").value.trim();
+      if (name === "") return alert("Enter a group name.");
+      const groups = JSON.parse(localStorage.getItem("groups") || "[]");
+      groups.push({ name, private: tag !== "", tag });
+      localStorage.setItem("groups", JSON.stringify(groups));
+      renderGroups();
+      document.getElementById("newGroupName").value = "";
+      document.getElementById("accessTag").value = "";
+    }
+
+    window.onload = () => {
+      renderGroups();
+    };
+  </script>
 
 </body>
 </html>
